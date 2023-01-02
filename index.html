@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+     <meta charset="UTF-8">
+     <meta http-equiv="X-UA-Compatible" content="IE=edge">
+     <link rel="stylesheet" href="styles/style.css">
+     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+     <title>Auto Picker Tasks</title>
+</head>
+
+<body>
+     <div class="picker">
+          <div class="picker__image-block">
+               <img src="./images/TrackEnsure.png" alt="TrackEnsure image">
+          </div>
+          <section class="picker__radio-block radio-block">
+               <div class="radio-block__OTH">
+                    <input type="checkbox" name="OTH_btn" id='OTH' data-taskType="log editing">
+                    <label for="OTH">LOG EDITING (ONE TIME HELP)</label>
+               </div>
+               <div class="radio-block__TimeRunOut">
+                    <input type="checkbox" name="TimeRunOut_btn" id="timeRunOut" data-taskType="time is running out">
+                    <label for="timeRunOut">TIME RUNNING OUT</label>
+               </div>
+               <div class="radio-block__firmwareUpdate">
+                    <input type="checkbox" name="firmwareUpdate_btn" id="firmware update" data-taskType="firmware update">
+                    <label for="firmware update">FIRMWARE UPDATE</label>
+               </div>
+          </section>
+          <button class="radio-block__start-search" disabled>Start taking</button>
+          <button class="radio-block__clear-localstorage">Clear</button>
+     </div>
+     <script src="./scripts/popup.js"></script>
+</body>
+
+</html>

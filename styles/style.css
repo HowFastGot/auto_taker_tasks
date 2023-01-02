@@ -1,0 +1,180 @@
+* {
+	padding: 0;
+	margin: 0;
+	border: 0;
+}
+
+*,
+*:before,
+*:after {
+	box-sizing: border-box;
+}
+
+:focus,
+:active {
+	outline: none;
+}
+
+a:focus,
+a:active {
+	outline: none;
+}
+
+nav,
+footer,
+header,
+aside {
+	display: block;
+}
+
+html,
+body {
+	height: 100%;
+	width: 100%;
+	font-family: 'Poppins', 'arial', sans-serif;
+	font-size: 100%;
+	line-height: 1;
+	font-size: 14px;
+	-ms-text-size-adjust: 100%;
+	-moz-text-size-adjust: 100%;
+	-webkit-text-size-adjust: 100%;
+}
+
+input,
+button,
+textarea {
+	font-family: 'Poppins', 'arial', sans-serif;
+}
+
+input::-ms-clear {
+	display: none;
+}
+
+button {
+	cursor: pointer;
+	background-color: inherit;
+}
+
+button::-moz-focus-inner {
+	padding: 0;
+	border: 0;
+	background-color: inherit;
+}
+
+a,
+a:visited {
+	text-decoration: none;
+}
+
+a:hover {
+	text-decoration: none;
+}
+
+ul li {
+	list-style: none;
+}
+
+img {
+	vertical-align: top;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+	font-size: inherit;
+	font-weight: inherit;
+}
+
+.picker {
+	padding: 30px;
+	width: 350px;
+	height: 250px;
+	margin: 0 auto;
+	text-align: center;
+	background-color: #dee2e6;
+}
+.picker__image-block {
+	display: inline-block;
+	text-align: center;
+}
+.picker__image-block > img {
+	border-radius: 30px;
+}
+.picker__radio-block {
+	text-align: left;
+}
+.radio-block {
+	position: relative;
+}
+
+.radio-block__OTH label,
+.radio-block__OTH input,
+.radio-block__TimeRunOut label,
+.radio-block__TimeRunOut input,
+.radio-block__firmwareUpdate label,
+.radio-block__firmwareUpdat input {
+	cursor: pointer;
+	color: #2d3134;
+	font-weight: 800;
+}
+
+.radio-block__OTH input:checked + label,
+.radio-block__TimeRunOut input:checked + label,
+.radio-block__firmwareUpdate input:checked + label {
+	color: green;
+}
+
+.radio-block__OTH {
+	margin-top: 15px;
+}
+
+.radio-block__OTH,
+.radio-block__TimeRunOut,
+.radio-block__firmwareUpdat {
+	margin-bottom: 10px;
+}
+
+.radio-block__clear-localstorage {
+	position: absolute;
+	right: 5px;
+	bottom: 5px;
+	padding: 2px 5px;
+	font-size: 10px;
+	text-align: right;
+	background-color: #999;
+	color: #fff;
+	border-radius: 15px;
+	transition: all 1s ease;
+	cursor: pointer;
+}
+
+.radio-block__start-search {
+	position: absolute;
+	left: 5px;
+	bottom: 5px;
+	padding: 2px 5px;
+	font-size: 12px;
+	text-align: center;
+	background-color: green;
+	color: #fff;
+	border-radius: 15px;
+	transition: all 1s ease;
+	cursor: pointer;
+}
+
+.radio-block__clear-localstorage:hover {
+	transform: scale(0.9);
+}
+
+.radio-block__start-search:disabled {
+	opacity: 0.3;
+	background-color: #999;
+	cursor: not-allowed;
+}
+
+.radio-block__start-search:hover:not(:disabled) {
+	transform: scale(0.9);
+}

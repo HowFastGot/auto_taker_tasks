@@ -1,0 +1,31 @@
+{
+	"manifest_version": 3,
+	"name": "TrackEnsure: Auto Task Taker",
+	"description": "Для автоматичного прийняття таску з dashboard. Цей скрипт атоматично буде обирати таск з конкретним типом и забирати його",
+	"version": "1.0",
+	"permissions": ["activeTab"],
+	"icons": {
+		"16": "images/16.png",
+		"32": "images/32.png",
+		"48": "images/48.png",
+		"128": "images/128.png"
+	},
+	"action": {
+		"default_icon": {
+			"16": "images/16.png",
+			"32": "images/32.png",
+			"48": "images/48.png",
+			"128": "images/128.png"
+		},
+		"default_popup": "index.html"
+	},
+	"content_scripts": [
+		{
+			"js": ["scripts/content.js"],
+			"matches": ["https://trackensure.com/app-admin/support-dashboard/*"]
+		}
+	],
+	"background": {
+		"service_worker": "background.js"
+	}
+}
