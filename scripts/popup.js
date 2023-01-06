@@ -106,6 +106,7 @@ window.addEventListener("DOMContentLoaded", (e) => {
 
           chrome.action.setBadgeText({ text: "Searching" });
           chrome.action.setBadgeBackgroundColor({ color: "yellow" });
-     });
 
+     });
 });
+
