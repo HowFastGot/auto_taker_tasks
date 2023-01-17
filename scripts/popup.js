@@ -55,7 +55,7 @@ window.addEventListener("DOMContentLoaded", (e) => {
                     localStorage.removeItem(keyOfValue);
                     input.setAttribute("data-unchecked", true);
 
-                    startButton.disabled = !e.target.checked;
+                    startButton.disabled = localStorage.length === 0;
                }
 
                switch (localStorage.length) {
