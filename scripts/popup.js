@@ -1,5 +1,7 @@
 window.addEventListener("DOMContentLoaded", (e) => {
      const startButton = document.querySelector(".radio-block__start-search");
+     const setOrRemoveInterval = document.querySelector(".radio-block__set-interval");
+
 
      switch (localStorage.length) {
           case 0:
@@ -95,6 +97,12 @@ window.addEventListener("DOMContentLoaded", (e) => {
 
           const localStorageData = {};
 
+          if (setOrRemoveInterval.classList.contains("active")) {
+               localStorageData["interval"] = true;
+          } else {
+               localStorageData["interval"] = false;
+          }
+
           for (let key in localStorage) {
                if (!localStorage.hasOwnProperty(key)) {
                     continue; // пропустит такие ключи, как "setItem", "getItem" и так далее
@@ -106,6 +114,16 @@ window.addEventListener("DOMContentLoaded", (e) => {
 
           chrome.action.setBadgeText({ text: "Searching" });
           chrome.action.setBadgeBackgroundColor({ color: "yellow" });
+
+     });
+
+     setOrRemoveInterval.addEventListener("click", (e) => {
+
+          if (e.target.classList.contains("active")) {
+               e.target.classList.remove("active");
+          } else {
+               e.target.classList.add("active");
+          }
 
      });
 });

@@ -165,6 +165,24 @@ h6 {
 	cursor: pointer;
 }
 
+.radio-block__set-interval {
+	position: relative;
+	top: 37px;
+	padding: 5px 10px;
+	font-size: 10px;
+	text-align: center;
+	background-color: rgb(30, 72, 4);
+	color: #fff;
+	border-radius: 15px;
+	transition: all 1s ease;
+	cursor: pointer;
+}
+
+.radio-block__set-interval.active {
+	background-color: yellow;
+	color: #000;
+}
+
 .radio-block__clear-localstorage:hover {
 	transform: scale(0.9);
 }
