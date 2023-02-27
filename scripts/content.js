@@ -1,5 +1,39 @@
+async function asyncLoadingFunction(url) {
+     const src = chrome.runtime.getURL(url);
+     return await import(src);
+}
+
+let handleClickOnPauseArrow,
+     deleteModals,
+     createEmtyTaskListIndicator,
+     deleteUnappropriateTasks,
+     bindListenerToButton,
+     triggerForObserverAction
+
+asyncLoadingFunction("scripts/src/createEmtyTaskListIndicator.js")
+     .then((res) => createEmtyTaskListIndicator = res.createEmtyTaskListIndicator)
+
+asyncLoadingFunction("scripts/src/triggerForObserverAction.js")
+     .then((res) => triggerForObserverAction = res.triggerForObserverAction)
+
+asyncLoadingFunction("scripts/src/deleteModals.js")
+     .then((res) => deleteModals = res.deleteModals)
+
+asyncLoadingFunction("scripts/src/deleteUnappropriateTasks.js")
+     .then((res) => deleteUnappropriateTasks = res.deleteUnappropriateTasks)
+
+asyncLoadingFunction("scripts/src/handleClickFunctions.js")
+     .then((res) => bindListenerToButton = res.bindListenerToButton)
+
+asyncLoadingFunction("scripts/src/handleClickOnPauseArrow.js")
+     .then((res) => handleClickOnPauseArrow = res.handleClickOnPauseArrow)
+
+
+
+let defaultArrayOfTasksType = ["log editing", "time is running out", "firmware update"];
+
 chrome.runtime.onMessage.addListener(
-     function (request, sender, sendResponse) {
+     function (request) {
 
           const taksTypeObj = JSON.parse(request.message);
           const typeOfTaksData = [];
@@ -11,27 +45,18 @@ chrome.runtime.onMessage.addListener(
                typeOfTaksData.push(taksTypeObj[key]);
           }
 
+
           if (taksTypeObj.interval && !sessionStorage.getItem("idInterval")) {
 
                let intervalId = setInterval(() => {
-                    const div = document.querySelector(".own-div");
-                    const refreshButton2 = document.querySelector(".row-cols-1 .btn-primary");
-                    const rowsTasks = document.querySelectorAll("div.datatable-row-center.datatable-row-group.ng-star-inserted");
+                    handleClickOnPauseArrow();
 
-                    if (!document.querySelector(".pause-banner")) {
-                         handleClickOnPauseArrow(document.querySelector(".btn-action-select").closest("div"));
+                    const ownDivIndicator = document.querySelector(".own-div");
+                    if (ownDivIndicator) {
+                         ownDivIndicator.style.background = "red";
                     }
-
-                    if (div) {
-                         div.style.background = "red";
-                    }
-
-                    if (rowsTasks.length > 0) return;
-
-                    let event = new MouseEvent("click");
-                    refreshButton2?.dispatchEvent(event);
-
-                    startManualOrAutoTake({ isObserve: true }, typeOfTaksData);
+                    bindListenerToButton(document.querySelector(".row-cols-1 .btn-primary"))
+                    // startManualOrAutoTake({ isObserve: true }, typeOfTaksData);
                }, 30000);
 
                sessionStorage.setItem("idInterval", intervalId);
@@ -46,172 +71,82 @@ chrome.runtime.onMessage.addListener(
      }
 );
 
-async function handleClickOnPauseArrow(arrowElem) {
+function startManualOrAutoTake({ isObserve, mutationCount = 0 }, typeOfTaksDataArray = defaultArrayOfTasksType) {
+     const taskRows = document.querySelectorAll("div.datatable-row-center.datatable-row-group.ng-star-inserted");
 
-     const modals = document.querySelectorAll(".modal");
+     const divElement = createEmtyTaskListIndicator(taskRows.length);
 
-     if (modals?.length > 0) {
-          modals.forEach(modal => {
-               modal.remove();
-          });
-     }
+     if (taskRows.length > 0) {
 
-     if (arrowElem && !document.querySelector(".pause-banner")) {
+          if (isObserve) {
 
-          arrowElem.click();
-
-          const responseWaiting = new Promise((resolve, reject) => {
+               triggerForObserverAction(divElement);
 
                setTimeout(() => {
-                    const pauseBtn = document.querySelector(".pause-btn");
-
-                    if (pauseBtn) {
-
-                         pauseBtn.click();
-
-                         resolve(true);
-                         return
-                    }
-
-                    const resumeBtn = document.querySelector(".resume-btn");
-
-                    if (resumeBtn) {
-                         resolve(false);
-                    } else {
-                         reject("Didn't find the neither pause nor resume buttons");
-                    }
-
-               }, 1500);
-
-          });
-
-          const response = await responseWaiting;
-
-          return response;
-     } else {
-
-          const responseSync = new Promise((resolve, reject) => {
-
-               if (arrowElem && document.querySelector(".pause-banner")) {
-                    resolve(true)
-               } else {
-                    reject(false)
-               }
-
-          });
-
-          const responseSyncAwait = await responseSync;
-
-          return responseSyncAwait;
-     }
-}
-
-function createEmtyTaskListIndicator(taskRowsQuant, isMyTasksSection) {
-
-     let divSign;
-     let color = taskRowsQuant > 0 ? "green" : "yellow";
-     let countOfRow = 0;
-
-     if (taskRowsQuant !== countOfRow || countOfRow == 0) {
-
-          document.querySelector(".own-div")?.remove();
-
-          divSign = document.createElement("div");
-          divSign.classList.add("own-div");
-
-          divSign.style.cssText = `
-                    display: inline-block;
-                    width: 50px;
-                    min-height: 50px;
-                    position: fixed;
-                    right: 30px;
-                    bottom: 70px;
-                    color: #000;
-                    text-align: center;
-                    line-height: 50px;
-                    z-index: 50;
-                    cursor: none;
-                    background-color: ${color};
-                    border-radius: 50%;
-                    transition: all 3s ease;
-               `;
-
-          countOfRow = taskRowsQuant.length;
-
-          if (isMyTasksSection) {
-               divSign.remove();
+                    takeTask({
+                         rowTaskSelector: "div.datatable-row-center.datatable-row-group.ng-star-inserted",
+                         typeTaskSelector: "datatable-body-cell > .datatable-body-cell-label > .ng-tns-c5-1 > .ng-tns-c5-1 > span.ng-tns-c5-1",
+                         actionButtonSelector: ".actions-button-width",
+                         takeTaskPlusSelector: ".dropdown-menu .fa-plus",
+                         modalTextAreaSelector: ".modal .modal-dialog .modal-content textarea",
+                         yesModalButtonSelector: ".modal-footer button",
+                         typeTaskTempalte: typeOfTaksDataArray,
+                         transferReasonSelector: "datatable-body-cell > .datatable-body-cell-label > .text-break > span.text-wrap",
+                         taskRows
+                    })
+               }, 2000);
           } else {
-               document.body.append(divSign);
-               divSign.textContent = sessionStorage.getItem("tasks") ?? 0;
+
+               takeTask({
+                    rowTaskSelector: "div.datatable-row-center.datatable-row-group.ng-star-inserted",
+                    typeTaskSelector: "datatable-body-cell > .datatable-body-cell-label > .ng-tns-c5-1 > .ng-tns-c5-1 > span.ng-tns-c5-1",
+                    actionButtonSelector: ".actions-button-width",
+                    takeTaskPlusSelector: ".dropdown-menu .fa-plus",
+                    modalTextAreaSelector: ".modal .modal-dialog .modal-content textarea",
+                    yesModalButtonSelector: ".modal-footer button",
+                    typeTaskTempalte: typeOfTaksDataArray,
+                    taskRows,
+                    transferReasonSelector: "datatable-body-cell > .datatable-body-cell-label > .text-break > span.text-wrap"
+               });
           }
 
-     }
+     } else {
 
-     return divSign;
+
+
+          const observer = new MutationObserver(() => {
+               if (mutationCount === 0) {
+                    startManualOrAutoTake({ isObserve: true, mutationCount: mutationCount++ }, defaultArrayOfTasksType);
+               }
+               mutationCount++;
+          });
+
+          observer.observe(document.querySelector(".datatable-body"), { childList: true, subtree: true });
+     }
 }
 
-const defaultArrayOfTasksType = ["log editing(one time help)", "time is running out", "firmware update"];
-
 function takeTask({
-     rowTaskSelector,
-     typeTaskSelector,
+     taskRows,
      actionButtonSelector,
      takeTaskPlusSelector,
      modalTextAreaSelector,
      yesModalButtonSelector,
-     typeTaskTempalte,
-     transferReasonSelector,
-     isObserve
+     typeTaskTempalte
 }) {
 
-     const rowsTasks = document.querySelectorAll(rowTaskSelector);
+     if (taskRows.length > 0) {
 
-     const modal = document.querySelector(".modal.fade.show");
+          taskRows.forEach((row, i) => {
 
-     if (modal) {
-          return;
-     }
+               if (i !== 0) return;
 
-     if (rowsTasks.length > 0) {
+               deleteUnappropriateTasks(typeTaskTempalte, row);
 
-          rowsTasks.forEach((row, i) => {
-               const collectionSections = row.querySelectorAll(".datatable-body-cell");
-
-               const taskData = {
-                    transferReason: collectionSections[13].textContent.trim(),
-                    typeOfTask: collectionSections[9].querySelector("span").textContent.toLowerCase().trim(),
-                    taskSubType: collectionSections[9].querySelector("div.datatable-body-cell-label > div > div:nth-child(9) > span")?.textContent ?? ""
-               };
-
-               const { transferReason, typeOfTask } = taskData;
                const actionButton = row.querySelector(actionButtonSelector);
-               const isProccesedTaskArrowElem = document.querySelector(".btn-action-select")?.closest("div");
 
-               const isMyTasksBoolean = document.querySelector("#checkBoxes > .row > .col #showMyTasks input").checked;
-               let availableIndex = 0;
-               alert(typeOfTask.toLowerCase() + "  typeOfTask " + typeTaskTempalte.includes(typeOfTask))
-               if (!typeTaskTempalte.includes(typeOfTask) && !isMyTasksBoolean) {
-                    row.closest(".datatable-row-wrapper").innerHTML =
-                         `<div style='width: 1885px; margin: 0 auto; color: #000; text-align: center; border: 1px solid #343a40; line-height: 65px;'>
-                              The type of these tasks inappropriate for your preference! Refresh the page!
-                         </div>`;
-                    availableIndex = i;
-                    return;
-               } else if (typeOfTask.toLowerCase() === "log editing" && transferReason.toLowerCase() !== "please check if you can..." && !isMyTasksBoolean) {
-                    row.closest(".datatable-row-wrapper").innerHTML =
-                         `<div style='width: 1885px; margin: 0 auto; color: #000; text-align: center; border: 1px solid #343a40; line-height: 65px;'>
-                              These tasks were not from the system, someone transfered it! Refresh the page!
-                         </div >`;
-                    return;
+               new Promise(async function (resolve, reject) {
 
-               } else if (i > availableIndex) {
-                    return;
-               }
-
-
-               new Promise(function (resolve, reject) {
-
-                    let isProccesedTask = handleClickOnPauseArrow(isProccesedTaskArrowElem);
+                    const isProccesedTask = await handleClickOnPauseArrow();
 
                     if (isProccesedTask) {
                          setTimeout(() => {
@@ -232,44 +167,31 @@ function takeTask({
                })
                     .then(actionButton => {
 
-                         const handleClickActionButton = (e) => {
-                              e.stopPropagation();
-                              actionButton.removeEventListener("click", handleClickActionButton);
-                         }
-
-                         if (actionButton) {
-                              actionButton.addEventListener("click", handleClickActionButton)
-                         }
-
-                         actionButton.click();
+                         bindListenerToButton(actionButton)
+                         const takeTaskButton = document.querySelector(takeTaskPlusSelector).closest("button");
 
                          return new Promise((resolve, reject) => {
-                              const takeTaskButton = document.querySelector(takeTaskPlusSelector).closest("button"); // проблема с текой тасков тут
-
                               setTimeout(() => {
 
                                    if (takeTaskButton) {
                                         resolve(takeTaskButton);
                                    } else {
-                                        reject(new Error("Didn't find the take button"));
+                                        reject(new Error("Didn't find the take button or modal exist!"));
                                    }
                               }, 500);
                          });
 
                     })
                     .then((takeBtn) => {
-                         if (takeBtn) {
-                              takeBtn.click();
-                         }
+                         bindListenerToButton(takeBtn);
+                         const modalTextArea = document.querySelector(modalTextAreaSelector);
 
                          return new Promise((resolve, reject) => {
-                              const modalTextArea = document.querySelector(modalTextAreaSelector);
 
-                              if (modalTextArea.tagName.toLowerCase() === "textarea") {
+                              if (modalTextArea) {
 
                                    setTimeout(() => {
                                         modalTextArea.value = "Taks has been taken";
-
                                         const yesModalButton = document.querySelector(yesModalButtonSelector);
 
                                         if (yesModalButton?.tagName?.toLowerCase() === "button") {
@@ -285,31 +207,20 @@ function takeTask({
                          });
                     })
                     .then((yesModalButton) => {
-
-                         if (yesModalButton) {
-                              yesModalButton.removeAttribute("disabled");
-                              yesModalButton.dispatchEvent(new MouseEvent("click"));
-                         } else {
-                              alert("YesButtom wasn't resolved in promise");
-                         }
+                         bindListenerToButton(yesModalButton);
+                         handleClickOnPauseArrow();
 
                          return new Promise((resolve, reject) => {
+
                               setTimeout(() => {
-                                   const arrowCurrentTask = document.querySelector(".btn-action-select").closest("div");
+                                   resolve();
+                              }, 3000);
 
-                                   if (arrowCurrentTask) {
-                                        resolve(arrowCurrentTask);
-                                   } else {
-                                        reject("Nothig is taken");
-                                   }
-
-                              }, 2500);
                          });
                     })
-                    .then(arrow => {
-                         return handleClickOnPauseArrow(arrow);
-                    })
                     .then(() => {
+                         const refreshButton = document.querySelector(".row-cols-1 .btn-primary");
+                         bindListenerToButton(refreshButton);
 
                          const indicatorOfCount = document.querySelector(".own-div");
 
@@ -320,129 +231,20 @@ function takeTask({
                               indicatorOfCount.textContent = countTakenTasks;
                          }
 
-                         return new Promise((resolve, reject) => {
+                         return new Promise((resolve) => {
                               setTimeout(() => {
-
-                                   const refreshButton = document.querySelector(".row-cols-1 .btn-primary");
-
-                                   if (refreshButton) {
-                                        refreshButton.click();
-
-                                        resolve(refreshButton);
-                                   } else {
-                                        reject(" Refresh buttom is't found ");
-                                   }
-
+                                   resolve(true);
                               }, 1500);
                          });
                     })
                     .then(() => {
-                         if (document.querySelectorAll(rowTaskSelector).length > 4 && isObserve) return;
-
                          setTimeout(() => {
+                              deleteModals();
                               startManualOrAutoTake({ isObserve: false }, defaultArrayOfTasksType);
-                         }, 3000);
+                         }, 2000);
                     })
                     .catch(err => console.log(err));
           });
-     }
-}
-
-function startManualOrAutoTake({ isObserve }, typeOfTaksDataArray = defaultArrayOfTasksType) {
-     const taskRows = document.querySelectorAll("div.datatable-row-center.datatable-row-group.ng-star-inserted");
-     const isMyTasksBoolean = document.querySelector("#checkBoxes > .row > .col #showMyTasks input").checked;
-     const isAllTransferedTasks = document.querySelector("#transferredTask > input").checked;
-
-     const divElement = createEmtyTaskListIndicator(taskRows.length, isMyTasksBoolean);
-
-     if (taskRows.length > 0) {
-
-          if (isObserve) {
-
-               setTimeout(() => {
-                    takeTask({
-                         rowTaskSelector: "div.datatable-row-center.datatable-row-group.ng-star-inserted",
-                         typeTaskSelector: "datatable-body-cell > .datatable-body-cell-label > .ng-tns-c5-1 > .ng-tns-c5-1 > span.ng-tns-c5-1",
-                         actionButtonSelector: ".actions-button-width",
-                         takeTaskPlusSelector: ".dropdown-menu .fa-plus",
-                         modalTextAreaSelector: ".modal .modal-dialog .modal-content textarea",
-                         yesModalButtonSelector: ".modal-footer button",
-                         typeTaskTempalte: typeOfTaksDataArray,
-                         transferReasonSelector: "datatable-body-cell > .datatable-body-cell-label > .text-break > span.text-wrap",
-                         isObserve
-                    })
-               }, 2000);
-
-               divElement.style.transform = "scale(0.3)";
-
-               const idTime = setTimeout(() => {
-                    divElement.style.transform = "";
-                    clearTimeout(idTime);
-               }, 2000);
-          } else {
-
-               takeTask({
-                    rowTaskSelector: "div.datatable-row-center.datatable-row-group.ng-star-inserted",
-                    typeTaskSelector: "datatable-body-cell > .datatable-body-cell-label > .ng-tns-c5-1 > .ng-tns-c5-1 > span.ng-tns-c5-1",
-                    actionButtonSelector: ".actions-button-width",
-                    takeTaskPlusSelector: ".dropdown-menu .fa-plus",
-                    modalTextAreaSelector: ".modal .modal-dialog .modal-content textarea",
-                    yesModalButtonSelector: ".modal-footer button",
-                    typeTaskTempalte: typeOfTaksDataArray,
-                    transferReasonSelector: "datatable-body-cell > .datatable-body-cell-label > .text-break > span.text-wrap"
-               });
-          }
-
-     } else {
-
-          const observer = new MutationObserver((records, observerParticular) => {
-
-               observerParticular.disconnect();
-
-               records.forEach((record, index) => {
-
-                    if (record.target !== document.querySelector(".datatable-scroll") ||
-                         document.querySelector("modal-container") || record.type !== "childList" ||
-                         index > 3 || record.removedNodes.length > 0
-                    ) {
-
-                         return
-                    };
-
-                    for (let i = 0; i < record.addedNodes.length; i++) {
-
-                         switch (index) {
-
-                              case 1:
-                                   startManualOrAutoTake({ isObserve: true }, defaultArrayOfTasksType);
-                                   break;
-                              case 2:
-                                   setTimeout(() => {
-                                        startManualOrAutoTake({ isObserve: true }, defaultArrayOfTasksType);
-                                   }, 7000);
-                                   break;
-                              case 3:
-                                   setTimeout(() => {
-
-                                        startManualOrAutoTake({ isObserve: true }, defaultArrayOfTasksType);
-                                   }, 17000);
-                                   break;
-                              case 0:
-                                   setTimeout(() => {
-                                        startManualOrAutoTake({ isObserve: true }, defaultArrayOfTasksType);
-                                   }, 27000);
-                                   break;
-                              default:
-                                   alert("Default" + index);
-                                   return;
-                         }
-                    }
-               });
-
-          });
-
-          observer.observe(document.querySelector(".datatable-body"), { childList: true, subtree: true });
-
      }
 }
 

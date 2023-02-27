@@ -25,6 +25,12 @@
 			"matches": ["https://trackensure.com/app-admin/support-dashboard/*"]
 		}
 	],
+	"web_accessible_resources": [
+		{
+			"resources": ["scripts/src/*.js"],
+			"matches": ["https://*/*"]
+		}
+	],
 	"background": {
 		"service_worker": "background.js"
 	}
