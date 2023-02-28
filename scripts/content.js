@@ -49,6 +49,7 @@ chrome.runtime.onMessage.addListener(
           if (taksTypeObj.interval && !sessionStorage.getItem("idInterval")) {
 
                let intervalId = setInterval(() => {
+                    deleteModals();
                     handleClickOnPauseArrow();
 
                     const ownDivIndicator = document.querySelector(".own-div");
@@ -82,7 +83,7 @@ function startManualOrAutoTake({ isObserve, mutationCount = 0 }, typeOfTaksDataA
 
                triggerForObserverAction(divElement);
 
-               setTimeout(() => {
+               const id = setTimeout(() => {
                     takeTask({
                          rowTaskSelector: "div.datatable-row-center.datatable-row-group.ng-star-inserted",
                          typeTaskSelector: "datatable-body-cell > .datatable-body-cell-label > .ng-tns-c5-1 > .ng-tns-c5-1 > span.ng-tns-c5-1",
@@ -94,6 +95,7 @@ function startManualOrAutoTake({ isObserve, mutationCount = 0 }, typeOfTaksDataA
                          transferReasonSelector: "datatable-body-cell > .datatable-body-cell-label > .text-break > span.text-wrap",
                          taskRows
                     })
+                    clearTimeout(id)
                }, 2000);
           } else {
 
@@ -112,10 +114,9 @@ function startManualOrAutoTake({ isObserve, mutationCount = 0 }, typeOfTaksDataA
 
      } else {
 
+          const observer = new MutationObserver((mutations) => {
 
-
-          const observer = new MutationObserver(() => {
-               if (mutationCount === 0) {
+               if (mutationCount === 0 && mutations[0].type === "childList" && mutations[0].addedNodes.length > 0) {
                     startManualOrAutoTake({ isObserve: true, mutationCount: mutationCount++ }, defaultArrayOfTasksType);
                }
                mutationCount++;
@@ -149,13 +150,15 @@ function takeTask({
                     const isProccesedTask = await handleClickOnPauseArrow();
 
                     if (isProccesedTask) {
-                         setTimeout(() => {
+                         const id = setTimeout(() => {
 
                               if (actionButton) {
                                    resolve(actionButton);
                               } else {
                                    reject("Didn't find actionButton");
                               }
+
+                              clearTimeout(id)
                          }, 1000);
                     } else {
                          if (actionButton) {
@@ -190,7 +193,7 @@ function takeTask({
 
                               if (modalTextArea) {
 
-                                   setTimeout(() => {
+                                   const id = setTimeout(() => {
                                         modalTextArea.value = "Taks has been taken";
                                         const yesModalButton = document.querySelector(yesModalButtonSelector);
 
@@ -199,6 +202,7 @@ function takeTask({
                                         } else {
                                              reject("The yes buttom wasn't found");
                                         }
+                                        clearTimeout(id)
                                    }, 1500);
                               } else {
                                    reject("Textarea of modal wasn't found");
@@ -208,19 +212,39 @@ function takeTask({
                     })
                     .then((yesModalButton) => {
                          bindListenerToButton(yesModalButton);
-                         handleClickOnPauseArrow();
 
-                         return new Promise((resolve, reject) => {
 
-                              setTimeout(() => {
-                                   resolve();
+                         return new Promise(async (resolve, reject) => {
+                              const id = setTimeout(async () => {
+                                   deleteModals();
+                                   const response = await handleClickOnPauseArrow();
+
+                                   resolve(response);
+                                   clearTimeout(id)
                               }, 3000);
 
                          });
                     })
                     .then(() => {
+
                          const refreshButton = document.querySelector(".row-cols-1 .btn-primary");
                          bindListenerToButton(refreshButton);
+
+                         return new Promise((resolve) => {
+                              const id = setTimeout(() => {
+                                   resolve(true);
+                                   clearTimeout(id)
+                              }, 1500);
+                         });
+                    })
+                    .then(() => {
+                         const id = setTimeout(() => {
+                              deleteModals();
+
+                              startManualOrAutoTake({ isObserve: false }, defaultArrayOfTasksType);
+
+                              clearTimeout(id)
+                         }, 2000);
 
                          const indicatorOfCount = document.querySelector(".own-div");
 
@@ -230,18 +254,6 @@ function takeTask({
                               sessionStorage.setItem("tasks", countTakenTasks + 1);
                               indicatorOfCount.textContent = countTakenTasks;
                          }
-
-                         return new Promise((resolve) => {
-                              setTimeout(() => {
-                                   resolve(true);
-                              }, 1500);
-                         });
-                    })
-                    .then(() => {
-                         setTimeout(() => {
-                              deleteModals();
-                              startManualOrAutoTake({ isObserve: false }, defaultArrayOfTasksType);
-                         }, 2000);
                     })
                     .catch(err => console.log(err));
           });

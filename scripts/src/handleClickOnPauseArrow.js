@@ -1,10 +1,9 @@
-export async function handleClickOnPauseArrow(time = 1500) {
+export async function handleClickOnPauseArrow(time = 1000) {
+     const arrowElem = document.querySelector(".btn-action-select")?.closest("div");
 
      if (document.querySelector(".pause-banner")) {
           return false;
      }
-
-     const arrowElem = document.querySelector(".btn-action-select")?.closest("div");
 
      if (arrowElem) {
 
@@ -12,17 +11,17 @@ export async function handleClickOnPauseArrow(time = 1500) {
 
           const responseWaiting = new Promise((resolve, reject) => {
 
-               setTimeout(() => {
+               const id = setTimeout(() => {
                     const pauseBtn = document.querySelector(".pause-btn");
 
                     if (pauseBtn) {
 
                          pauseBtn.click();
 
-                         setTimeout(() => {
+                         const id = setTimeout(() => {
                               resolve(true);
+                              clearTimeout(id)
                          }, 500);
-                         return;
                     }
 
                     const resumeBtn = document.querySelector(".resume-btn");
@@ -32,11 +31,12 @@ export async function handleClickOnPauseArrow(time = 1500) {
                     } else {
                          deleteModals();
 
-                         setInterval(() => {
+                         const id = setTimeout(() => {
                               startManualOrAutoTake({ isObserve: false }, defaultArrayOfTasksType);
+                              clearTimeout(id)
                          }, 2000);
                     }
-
+                    clearTimeout(id)
                }, time);
 
           });
