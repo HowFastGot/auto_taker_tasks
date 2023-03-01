@@ -1,7 +1,7 @@
-export function createEmtyTaskListIndicator(taskRowsQuant) {
+export function createEmtyTaskListIndicator(taskRowsQuant, isInterval = false) {
      const isMyTasksSection = document.querySelector("#checkBoxes > .row > .col #showMyTasks input").checked;
      let divSign;
-     let color = taskRowsQuant > 0 ? "green" : "yellow";
+     let color = taskRowsQuant > 0 ? "green" : isInterval ? "#999" : "yellow";
      let countOfRow = 0;
 
      if (taskRowsQuant !== countOfRow || countOfRow == 0) {
@@ -19,6 +19,7 @@ export function createEmtyTaskListIndicator(taskRowsQuant) {
                     right: 30px;
                     bottom: 70px;
                     color: #000;
+                    font-weight: 700;
                     text-align: center;
                     line-height: 50px;
                     z-index: 50;

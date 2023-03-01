@@ -4,7 +4,7 @@ async function asyncLoadingFunction(url) {
 }
 
 let handleClickOnPauseArrow,
-     deleteModals,
+     isDeleteModals,
      createEmtyTaskListIndicator,
      deleteUnappropriateTasks,
      bindListenerToButton,
@@ -16,8 +16,8 @@ asyncLoadingFunction("scripts/src/createEmtyTaskListIndicator.js")
 asyncLoadingFunction("scripts/src/triggerForObserverAction.js")
      .then((res) => triggerForObserverAction = res.triggerForObserverAction)
 
-asyncLoadingFunction("scripts/src/deleteModals.js")
-     .then((res) => deleteModals = res.deleteModals)
+asyncLoadingFunction("scripts/src/isDeleteModals.js")
+     .then((res) => isDeleteModals = res.isDeleteModals)
 
 asyncLoadingFunction("scripts/src/deleteUnappropriateTasks.js")
      .then((res) => deleteUnappropriateTasks = res.deleteUnappropriateTasks)
@@ -48,16 +48,17 @@ chrome.runtime.onMessage.addListener(
 
           if (taksTypeObj.interval && !sessionStorage.getItem("idInterval")) {
 
-               let intervalId = setInterval(() => {
-                    deleteModals();
+               let intervalId = setInterval(async () => {
+                    await isDeleteModals(false);
                     handleClickOnPauseArrow();
 
                     const ownDivIndicator = document.querySelector(".own-div");
+
                     if (ownDivIndicator) {
-                         ownDivIndicator.style.background = "red";
+                         ownDivIndicator.style.background = "fuchsia";
                     }
-                    bindListenerToButton(document.querySelector(".row-cols-1 .btn-primary"))
-                    // startManualOrAutoTake({ isObserve: true }, typeOfTaksData);
+
+                    bindListenerToButton(document.querySelector(".row-cols-1 .btn-primary"));
                }, 30000);
 
                sessionStorage.setItem("idInterval", intervalId);
@@ -72,10 +73,10 @@ chrome.runtime.onMessage.addListener(
      }
 );
 
-function startManualOrAutoTake({ isObserve, mutationCount = 0 }, typeOfTaksDataArray = defaultArrayOfTasksType) {
+function startManualOrAutoTake({ isObserve }, typeOfTaksDataArray = defaultArrayOfTasksType) {
      const taskRows = document.querySelectorAll("div.datatable-row-center.datatable-row-group.ng-star-inserted");
 
-     const divElement = createEmtyTaskListIndicator(taskRows.length);
+     const divElement = createEmtyTaskListIndicator(taskRows.length, sessionStorage.getItem("idInterval"));
 
      if (taskRows.length > 0) {
 
@@ -116,13 +117,20 @@ function startManualOrAutoTake({ isObserve, mutationCount = 0 }, typeOfTaksDataA
 
           const observer = new MutationObserver((mutations) => {
 
-               if (mutationCount === 0 && mutations[0].type === "childList" && mutations[0].addedNodes.length > 0) {
-                    startManualOrAutoTake({ isObserve: true, mutationCount: mutationCount++ }, defaultArrayOfTasksType);
+               if (mutations[0].type === "childList" && mutations[0].addedNodes.length > 0 &&
+                    !sessionStorage.getItem("hasBeenInvoked")) {
+
+                    sessionStorage.setItem("hasBeenInvoked", "true")
+
+                    startManualOrAutoTake({ isObserve: true }, defaultArrayOfTasksType);
+                    observer.disconnect();
                }
-               mutationCount++;
           });
 
+          observer.disconnect();
+
           observer.observe(document.querySelector(".datatable-body"), { childList: true, subtree: true });
+          sessionStorage.removeItem("hasBeenInvoked");
      }
 }
 
@@ -137,11 +145,11 @@ function takeTask({
 
      if (taskRows.length > 0) {
 
-          taskRows.forEach((row, i) => {
+          taskRows.forEach(async (row, i) => {
 
-               if (i !== 0) return;
+               const isUnapropTask = await deleteUnappropriateTasks(typeTaskTempalte, row);
 
-               deleteUnappropriateTasks(typeTaskTempalte, row);
+               if (i !== 0 || isUnapropTask) return;
 
                const actionButton = row.querySelector(actionButtonSelector);
 
@@ -216,7 +224,7 @@ function takeTask({
 
                          return new Promise(async (resolve, reject) => {
                               const id = setTimeout(async () => {
-                                   deleteModals();
+                                   await isDeleteModals();
                                    const response = await handleClickOnPauseArrow();
 
                                    resolve(response);
@@ -239,12 +247,10 @@ function takeTask({
                     })
                     .then(() => {
                          const id = setTimeout(() => {
-                              deleteModals();
-
                               startManualOrAutoTake({ isObserve: false }, defaultArrayOfTasksType);
 
                               clearTimeout(id)
-                         }, 2000);
+                         }, 3000);
 
                          const indicatorOfCount = document.querySelector(".own-div");
 

@@ -29,7 +29,6 @@ export async function handleClickOnPauseArrow(time = 1000) {
                     if (resumeBtn) {
                          resolve(false);
                     } else {
-                         deleteModals();
 
                          const id = setTimeout(() => {
                               startManualOrAutoTake({ isObserve: false }, defaultArrayOfTasksType);
